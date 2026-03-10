@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EasySmm Pro - User</title>
+    <title>EasySmm Ultimate - User Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
-        :root { --bg: #f8fafc; --primary: #2563eb; --card: #fff; --text: #0f172a; --border: #e2e8f0; }
+        :root { --bg: #f8fafc; --primary: #2563eb; --card: #ffffff; --text: #0f172a; --border: #e2e8f0; --danger: #ef4444; --success: #10b981; --warning: #f59e0b;}
         body.dark { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --border: #334155; --primary: #3b82f6;}
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; min-height: 100vh; transition: 0.3s;}
         
@@ -19,96 +18,109 @@
         
         /* AUTH SCREEN */
         .auth-screen { width: 100%; max-width: 480px; padding: 30px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; background: var(--card); height: 100vh;}
-        .auth-logo { text-align: center; margin-bottom: 30px; }
-        .auth-logo i { font-size: 60px; color: var(--primary); }
         
-        /* HEADER */
-        .header { background: var(--card); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1100; }
-        .header-actions { display: flex; gap: 20px; align-items: center; }
-        .logout-btn { color: #ef4444; font-size: 20px; cursor: pointer; transition: 0.2s; }
-
+        /* HEADER & NOTIFICATIONS */
+        .header { background: var(--card); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1100; border-bottom: 1px solid var(--border);}
+        .logout-btn { color: var(--danger); font-size: 20px; cursor: pointer; }
+        .push-alert { position: fixed; top: -100px; left: 0; width: 100%; background: linear-gradient(to right, #f59e0b, #ef4444); color: white; padding: 15px; text-align: center; font-weight: bold; z-index: 9999; transition: 0.5s; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        
+        /* STATS & TABS */
         .stats-card { background: linear-gradient(135deg, var(--primary), #4f46e5); color: white; padding: 20px; margin: 15px; border-radius: 16px; display: flex; justify-content: space-between; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2); }
-        
         .section { display: none; padding: 15px; background: var(--card); border-radius: 16px; margin: 15px; border: 1px solid var(--border); animation: fadeIn 0.3s; }
         .section.active { display: block; }
         
+        /* SERVICE LIST & DOTS */
         .service-list { max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 5px; background: var(--bg); margin-bottom: 15px;}
-        .serv-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 8px; transition: 0.2s;}
+        .serv-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 8px;}
         .serv-item.selected { background: rgba(37, 99, 235, 0.1); border: 2px solid var(--primary); }
         .serv-info { flex: 1; }
-        .serv-name { font-weight: bold; font-size: 13px; margin: 0; }
+        .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px;}
+        .dot.Fast { background: var(--success); } .dot.Slow { background: var(--warning); } .dot.Offline { background: var(--danger); }
 
+        /* FORMS */
         label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: gray;}
-        select, input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: transparent; color: var(--text); font-family: inherit; font-size: 14px;}
+        select, input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: var(--bg); color: var(--text); font-family: inherit; font-size: 14px;}
         .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; }
+        .btn-small { padding: 5px 10px; font-size: 12px; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; color: white;}
         
+        /* NAV */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; background: var(--card); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); z-index: 1000;}
         .nav-item { text-align: center; color: gray; cursor: pointer; font-size: 10px; flex: 1; font-weight: 600;}
         .nav-item.active { color: var(--primary); }
         .nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
+<div class="push-alert" id="pushBanner">🔔 <span id="pushMsg">Flash Sale Active!</span></div>
+
 <div id="authBox" class="auth-screen">
-    <div class="auth-logo">
-        <i class="fa-solid fa-bolt"></i>
-        <h1 style="margin-top: 10px;">EasySmm Pro</h1>
-        <p style="color: gray; font-size: 14px;">Log in or create a new account</p>
-    </div>
+    <div style="text-align: center; margin-bottom: 20px;"><i class="fa-solid fa-bolt" style="font-size: 60px; color: var(--primary);"></i><h1>EasySmm</h1></div>
     <input type="text" id="auth-user" placeholder="Username">
     <input type="password" id="auth-pass" placeholder="Password">
     <button class="btn" id="authBtn" onclick="handleAuth()">Sign In / Register</button>
-    <p id="auth-msg" style="color: #ef4444; font-size: 12px; text-align: center; margin-top: 15px; font-weight: bold;"></p>
+    <p id="auth-msg" style="color: var(--danger); text-align: center; margin-top: 15px; font-weight: bold; font-size: 13px;"></p>
 </div>
 
 <div id="mainBox" class="app-container">
     <div class="header">
-        <h2 style="margin:0; color:var(--primary); font-weight: 800;"><i class="fa-solid fa-bolt"></i> EasySmm</h2>
-        <div class="header-actions">
+        <h2 style="margin:0; color:var(--primary);"><i class="fa-solid fa-bolt"></i> EasySmm</h2>
+        <div style="display: flex; gap: 20px; align-items: center;">
             <i class="fa-solid fa-circle-half-stroke" style="font-size: 20px; cursor: pointer;" onclick="toggleDark()"></i>
             <i class="fa-solid fa-power-off logout-btn" onclick="logout()"></i>
         </div>
     </div>
 
     <div class="stats-card">
-        <div><small>Account</small><br><strong id="uNameDisplay">...</strong></div>
-        <div style="text-align: right;"><small>Balance</small><br><strong style="font-size: 20px;">₹<span id="uBal">0.00</span></strong></div>
+        <div><small>Account ID</small><br><strong id="uNameDisplay">...</strong></div>
+        <div style="text-align: right;"><small>Wallet Balance</small><br><strong style="font-size: 20px;">₹<span id="uBal">0.00</span></strong></div>
     </div>
 
     <div id="sec-order" class="section active">
-        <label>Category</label>
+        <label>1. Select Category</label>
         <select id="catSelect" onchange="filterServices()"></select>
-        <label>Select Service</label>
+
+        <label>2. Choose Service</label>
         <div class="service-list" id="serviceList"></div>
-        <label>Target Link</label>
+
+        <label>3. Target Link</label>
         <input type="text" id="link" placeholder="Paste link here...">
-        <label>Quantity (Min 100)</label>
+
+        <label>4. Quantity (Min 100)</label>
         <input type="number" id="qty" placeholder="1000" oninput="calc()">
-        <label>Charge</label>
+
+        <label>Total Charge</label>
         <input type="text" id="charge" readonly placeholder="₹ 0.00" style="font-weight:900; color:var(--primary); background:var(--bg);">
-        <button class="btn" onclick="placeOrder()">Place Order</button>
+
+        <button class="btn" id="orderBtn" onclick="placeOrder()">Place Order Now</button>
     </div>
 
     <div id="sec-history" class="section">
         <h3>Order Logs</h3>
-        <div id="historyList"></div>
+        <div id="historyList">Loading...</div>
     </div>
 
     <div id="sec-funds" class="section">
-        <h3>Add Funds</h3>
-        <center><img id="qrImg" style="max-width:180px; display:none; border-radius:10px; margin-bottom:15px; border:2px solid #ddd;"></center>
-        <input type="number" id="utrAmt" placeholder="Amount">
-        <input type="text" id="utrNum" placeholder="UTR Number">
-        <button class="btn" onclick="submitUTR()">Submit Payment</button>
+        <h3>Deposit Money</h3>
+        <center><img id="qrImg" style="max-width:180px; display:none; border-radius:10px; margin-bottom:15px; border:2px solid var(--border);"></center>
+        <input type="number" id="utrAmt" placeholder="Amount Paid">
+        <input type="text" id="utrNum" placeholder="12-Digit UTR">
+        <button class="btn" onclick="submitUTR()">Verify Payment</button>
+    </div>
+
+    <div id="sec-help" class="section">
+        <h3>Support Tickets</h3>
+        <input type="text" id="t-sub" placeholder="Subject">
+        <textarea id="t-msg" placeholder="Describe issue..." rows="3"></textarea>
+        <button class="btn" onclick="submitTicket()">Submit Ticket</button>
     </div>
 
     <div class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('sec-order', this)"><i class="fa-solid fa-cart-shopping"></i>Order</div>
-        <div class="nav-item" onclick="switchTab('sec-history', this)"><i class="fa-solid fa-list-ul"></i>Logs</div>
-        <div class="nav-item" onclick="switchTab('sec-funds', this)"><i class="fa-solid fa-wallet"></i>Funds</div>
+        <div class="nav-item" onclick="switchTab('sec-history', this)"><i class="fa-solid fa-list"></i>Logs</div>
+        <div class="nav-item" onclick="switchTab('sec-funds', this)"><i class="fa-solid fa-indian-rupee-sign"></i>Funds</div>
+        <div class="nav-item" onclick="switchTab('sec-help', this)"><i class="fa-solid fa-headset"></i>Help</div>
     </div>
 </div>
 
@@ -117,124 +129,99 @@
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
 
     let currentUser = localStorage.getItem("smm_user");
-    let balance = 0, allServices = [], selectedServicePrice = 0;
+    let balance = 0, allServices = [], selectedServicePrice = 0, selectedServiceHealth = "Offline";
 
-    window.onload = () => {
-        if (currentUser) { showApp(); } 
-        else { showAuth(); }
-    };
+    window.onload = () => { if (currentUser) { showApp(); } else { showAuth(); } };
 
-    // --- NEW FIXED AUTH ---
+    // --- AUTH ---
     function handleAuth() {
-        let u = document.getElementById('auth-user').value.trim().toLowerCase();
-        let p = document.getElementById('auth-pass').value;
-        let msg = document.getElementById('auth-msg');
-        let btn = document.getElementById('authBtn');
-        
-        if(!u || !p) { msg.innerText = "❌ Enter both Username & Password"; return; }
-        
-        msg.style.color = "var(--primary)";
-        msg.innerText = "⏳ Connecting to database...";
-        btn.disabled = true;
+        let u = document.getElementById('auth-user').value.trim().toLowerCase(), p = document.getElementById('auth-pass').value, msg = document.getElementById('auth-msg');
+        if(!u || !p) return msg.innerText = "Fill all fields!";
+        msg.innerText = "Connecting...";
+        db.ref('users/' + u).once('value').then(s => {
+            if(s.exists()){ if(s.val().password === p){ loginSuccess(u); } else msg.innerText = "Wrong Password!"; } 
+            else { db.ref('users/' + u).set({password: p, balance: 0}).then(() => loginSuccess(u)); }
+        }).catch(e => msg.innerText = "Error: " + e.message);
+    }
+    function loginSuccess(user) { localStorage.setItem("smm_user", user); currentUser = user; showApp(); }
+    function logout() { if(confirm("Logout?")) { localStorage.removeItem("smm_user"); window.location.reload(); } }
+    function showApp() { document.getElementById('authBox').style.display='none'; document.getElementById('mainBox').style.display='block'; initApp(); }
+    function showAuth() { document.getElementById('authBox').style.display='flex'; document.getElementById('mainBox').style.display='none'; }
 
-        db.ref('users/' + u).once('value').then((s) => {
-            if(s.exists()){
-                // LOGIN
-                if(s.val().password === p){
-                    msg.innerText = "✅ Login successful!";
-                    setTimeout(() => loginSuccess(u), 500);
-                } else {
-                    msg.style.color = "#ef4444";
-                    msg.innerText = "❌ Incorrect password!";
-                    btn.disabled = false;
-                }
-            } else {
-                // REGISTER
-                msg.innerText = "✨ Creating new account...";
-                db.ref('users/' + u).set({
-                    password: p,
-                    balance: 0,
-                    regDate: Date.now()
-                }).then(() => {
-                    msg.innerText = "✅ Account created!";
-                    setTimeout(() => loginSuccess(u), 500);
-                }).catch((err) => {
-                    msg.style.color = "#ef4444";
-                    msg.innerText = "⚠️ ERROR: " + err.message;
-                    btn.disabled = false;
-                });
+    // --- PUSH NOTIFICATIONS (FEATURE 6) ---
+    db.ref('settings/notification').on('value', snap => {
+        if(snap.exists() && snap.val().msg) {
+            let data = snap.val();
+            // Only show if sent in the last 5 minutes
+            if(Date.now() - data.time < 300000) {
+                document.getElementById('pushMsg').innerText = data.msg;
+                document.getElementById('pushBanner').style.top = "0px";
+                setTimeout(() => { document.getElementById('pushBanner').style.top = "-100px"; }, 6000);
             }
-        }).catch((err) => {
-            msg.style.color = "#ef4444";
-            msg.innerText = "⚠️ CONNECTION ERROR: Check Rules";
-            btn.disabled = false;
-        });
-    }
-
-    function loginSuccess(user) {
-        localStorage.setItem("smm_user", user);
-        currentUser = user;
-        showApp();
-    }
-
-    function logout() {
-        if(confirm("Logout from EasySmm?")) {
-            localStorage.removeItem("smm_user");
-            window.location.reload();
         }
-    }
+    });
 
-    function showApp() {
-        document.getElementById('authBox').style.display = 'none';
-        document.getElementById('mainBox').style.display = 'block';
-        initApp();
-    }
-
-    function showAuth() {
-        document.getElementById('authBox').style.display = 'flex';
-        document.getElementById('mainBox').style.display = 'none';
-    }
-
-    // --- MATH & SERVICE ENGINE ---
+    // --- SERVICE MATH & HEALTH (FEATURE 3) ---
     function calc() {
         let q = Number(document.getElementById('qty').value);
-        let display = document.getElementById('charge');
-        if (q >= 100 && selectedServicePrice > 0) {
-            display.value = "₹ " + ((q / 1000) * selectedServicePrice).toFixed(2);
+        let btn = document.getElementById('orderBtn');
+        if(selectedServiceHealth === 'Offline') {
+            document.getElementById('charge').value = "SERVICE OFFLINE";
+            btn.style.background = "gray"; btn.innerText = "Currently Offline"; btn.disabled = true;
         } else {
-            display.value = "₹ 0.00";
+            btn.style.background = "var(--primary)"; btn.innerText = "Place Order Now"; btn.disabled = false;
+            if (q >= 100 && selectedServicePrice > 0) document.getElementById('charge').value = "₹ " + ((q / 1000) * selectedServicePrice).toFixed(2);
+            else document.getElementById('charge').value = "₹ 0.00";
         }
     }
 
-    function selectServ(key, price) {
+    function selectServ(key, price, health) {
         document.querySelectorAll('.serv-item').forEach(i => i.classList.remove('selected'));
-        let target = document.getElementById('serv_' + key);
-        if(target) target.classList.add('selected');
-        selectedServicePrice = parseFloat(price);
+        let el = document.getElementById('serv_' + key); if(el) el.classList.add('selected');
+        selectedServicePrice = parseFloat(price); selectedServiceHealth = health || "Fast";
         calc();
     }
 
+    // --- SYNC DATA ---
     function initApp() {
         document.getElementById('uNameDisplay').innerText = currentUser;
-        db.ref('users/' + currentUser).on('value', s => {
-            if(s.exists()) {
-                balance = s.val().balance || 0;
-                document.getElementById('uBal').innerText = balance.toFixed(2);
-            }
-        });
+        db.ref('users/' + currentUser + '/balance').on('value', s => { balance = s.val() || 0; document.getElementById('uBal').innerText = balance.toFixed(2); });
 
         db.ref('services').on('value', snap => {
             allServices = []; let cats = new Set();
             snap.forEach(c => { let s = c.val(); s.key = c.key; allServices.push(s); cats.add(s.category); });
-            let h = '<option value="">Choose Category</option>'; cats.forEach(c => h += `<option value="${c}">${c}</option>`);
-            document.getElementById('catSelect').innerHTML = h;
+            let h = '<option value="">Select Category</option>'; cats.forEach(c => h += `<option value="${c}">${c}</option>`);
+            document.getElementById('catSelect').innerHTML = h; filterServices();
         });
 
+        // --- ORDER HISTORY + REFILL/CANCEL BUTTONS (FEATURE 1 & 2) ---
         db.ref('orders').on('value', snap => {
             let h = ""; snap.forEach(c => {
-                let d = c.val(); if(d.user === currentUser) h = `<div style="border-bottom:1px solid #eee; padding:10px 0;"><b>${d.service}</b><br><small>${d.status} | ₹${d.charge}</small></div>` + h;
+                let d = c.val(); 
+                if(d.user === currentUser) {
+                    let actionBtn = "";
+                    if(d.status === "Pending" && !d.cancel_request) {
+                        actionBtn = `<button class="btn-small" style="background:var(--danger);" onclick="reqCancel('${c.key}')">Request Cancel</button>`;
+                    } else if(d.cancel_request) {
+                        actionBtn = `<span style="font-size:11px; color:var(--danger);">Cancellation Requested</span>`;
+                    } else if(d.status === "Completed") {
+                        if(!d.refill_status || d.refill_status === 'Available') actionBtn = `<button class="btn-small" style="background:var(--success);" onclick="reqRefill('${c.key}')">Request Refill</button>`;
+                        else actionBtn = `<span style="font-size:11px; color:var(--success);">Refill: ${d.refill_status}</span>`;
+                    }
+                    
+                    h = `<div style="border-bottom:1px solid var(--border); padding:10px 0;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <b>${d.service}</b>
+                                <strong style="color:var(--primary); font-size:12px;">${d.status}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <small>Qty: ${d.qty} | ₹${d.charge}</small>
+                                ${actionBtn}
+                            </div>
+                        </div>` + h;
+                }
             });
-            document.getElementById('historyList').innerHTML = h || "No orders found.";
+            document.getElementById('historyList').innerHTML = h || "No orders.";
         });
 
         db.ref('settings/qr_url').on('value', s => { if(s.val()){ document.getElementById('qrImg').src = s.val(); document.getElementById('qrImg').style.display='block'; }});
@@ -243,36 +230,43 @@
     function filterServices() {
         let cat = document.getElementById('catSelect').value, h = "";
         allServices.forEach(s => {
-            if(s.category === cat) h += `<div class="serv-item" id="serv_${s.key}" onclick="selectServ('${s.key}', ${s.price})"><div class="serv-info"><p class="serv-name">${s.name}</p><small>Price: ₹${s.price}/1k</small></div></div>`;
+            if(s.category === cat) {
+                let health = s.health || "Fast";
+                h += `<div class="serv-item" id="serv_${s.key}" onclick="selectServ('${s.key}', ${s.price}, '${health}')">
+                        <div class="serv-info">
+                            <p class="serv-name"><span class="dot ${health}"></span> ${s.name}</p>
+                            <small>Price: ₹${s.price}/1k | Status: ${health}</small>
+                        </div>
+                      </div>`;
+            }
         });
         document.getElementById('serviceList').innerHTML = h || '<p style="text-align:center; padding:10px; color:gray;">Pick a category above.</p>';
+        selectedServiceHealth = "Fast"; selectedServicePrice = 0; calc();
     }
 
+    // --- ACTIONS ---
     function placeOrder() {
         let charge = parseFloat(document.getElementById('charge').value.replace('₹ ', ''));
-        if(!charge || charge <= 0) return alert("Select service & quantity");
-        if(balance < charge) return alert("Insufficient Balance!");
+        if(selectedServiceHealth === 'Offline') return alert("This service is currently offline.");
+        if(!charge || charge <= 0) return alert("Select service & quantity!");
+        if(balance < charge) return alert("Low Balance!");
         
-        let selName = document.querySelector('.serv-item.selected .serv-name').innerText;
+        let selName = document.querySelector('.serv-item.selected .serv-name').innerText.replace(/(🟢|🟡|🔴| )/g, ''); // Clean name
         db.ref('users/'+currentUser).update({balance: balance - charge});
-        db.ref('orders').push({user:currentUser, service:selName, link:document.getElementById('link').value, qty:document.getElementById('qty').value, charge:charge, status:"Pending", timestamp:Date.now()});
-        alert("Order placed!");
-        switchTab('sec-history', document.querySelectorAll('.nav-item')[1]);
+        db.ref('orders').push({user:currentUser, service:selName, link:document.getElementById('link').value, qty:document.getElementById('qty').value, charge:charge, status:"Pending", cancel_request:false, refill_status:"Available", timestamp:Date.now()});
+        alert("Order Success!"); switchTab('sec-history', document.querySelectorAll('.nav-item')[1]);
     }
 
-    function submitUTR() {
-        let a = document.getElementById('utrAmt').value, n = document.getElementById('utrNum').value;
-        if(a && n) { db.ref('payments').push({user:currentUser, amount:Number(a), utr:n, status:"Pending"}); alert("Request sent!"); }
-    }
+    function reqCancel(id) { if(confirm("Request cancellation?")) db.ref('orders/'+id).update({cancel_request: true}); }
+    function reqRefill(id) { if(confirm("Request refill for drops?")) db.ref('orders/'+id).update({refill_status: 'Requested'}); }
 
-    function switchTab(id, el) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(id).classList.add('active'); el.classList.add('active');
-    }
+    function submitUTR() { let a = document.getElementById('utrAmt').value, n = document.getElementById('utrNum').value; if(a && n) { db.ref('payments').push({user:currentUser, amount:Number(a), utr:n, status:"Pending"}); alert("UTR Submitted!"); } }
+    function submitTicket() { let s = document.getElementById('t-sub').value, m = document.getElementById('t-msg').value; if(s && m) { db.ref('tickets').push({user:currentUser, subject:s, message:m, status:"Open"}); alert("Ticket Sent!"); } }
 
+    function switchTab(id, el) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById(id).classList.add('active'); el.classList.add('active'); }
     function toggleDark() { document.body.classList.toggle('dark'); localStorage.setItem('dark', document.body.classList.contains('dark')); }
     if(localStorage.getItem('dark') === 'true') document.body.classList.add('dark');
 </script>
 </body>
 </html>
+
