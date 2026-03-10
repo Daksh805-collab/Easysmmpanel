@@ -40,7 +40,8 @@
         /* FORMS */
         label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: gray;}
         select, input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: var(--bg); color: var(--text); font-family: inherit; font-size: 14px;}
-        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; }
+        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; transition: 0.2s;}
+        .btn:active { transform: scale(0.98); }
         .btn-small { padding: 5px 10px; font-size: 12px; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; color: white;}
         
         /* NAV */
@@ -138,6 +139,7 @@
 </div>
 
 <script>
+    // --- FIREBASE SETUP ---
     const firebaseConfig = { apiKey: "AIzaSyDme0mP07Q8G__B7W1su-4rnIrwwHsSddw", authDomain: "easysmmpanel-5ad4a.firebaseapp.com", databaseURL: "https://easysmmpanel-5ad4a-default-rtdb.firebaseio.com/", projectId: "easysmmpanel-5ad4a" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
 
@@ -172,16 +174,57 @@
         });
     }
 
-    // --- AUTH ---
+    // --- ENHANCED AUTHENTICATION ---
     function handleAuth() {
-        let u = document.getElementById('auth-user').value.trim().toLowerCase(), p = document.getElementById('auth-pass').value, msg = document.getElementById('auth-msg');
-        if(!u || !p) return msg.innerText = "Fill all fields!";
-        msg.innerText = "Connecting...";
+        let u = document.getElementById('auth-user').value.trim().toLowerCase();
+        let p = document.getElementById('auth-pass').value;
+        let msg = document.getElementById('auth-msg');
+        let btn = document.getElementById('authBtn');
+        
+        if(!u || !p) {
+            msg.style.color = "var(--danger)";
+            msg.innerText = "❌ Please enter Username and Password!";
+            return;
+        }
+        
+        msg.style.color = "var(--primary)";
+        msg.innerText = "⏳ Connecting to database...";
+        btn.disabled = true;
+        
         db.ref('users/' + u).once('value').then(s => {
-            if(s.exists()){ if(s.val().password === p){ loginSuccess(u); } else msg.innerText = "Wrong Password!"; } 
-            else { db.ref('users/' + u).set({password: p, balance: 0}).then(() => loginSuccess(u)); }
-        }).catch(e => msg.innerText = "Error: " + e.message);
+            if(s.exists()){ 
+                if(s.val().password === p){ 
+                    msg.style.color = "var(--success)";
+                    msg.innerText = "✅ Login Success!";
+                    setTimeout(() => loginSuccess(u), 500); 
+                } else {
+                    msg.style.color = "var(--danger)";
+                    msg.innerText = "❌ Wrong Password!"; 
+                    btn.disabled = false;
+                }
+            } else { 
+                msg.innerText = "✨ Creating your account...";
+                db.ref('users/' + u).set({
+                    password: p, 
+                    balance: 0, 
+                    joined: Date.now()
+                }).then(() => {
+                    msg.style.color = "var(--success)";
+                    msg.innerText = "✅ Account Created!";
+                    setTimeout(() => loginSuccess(u), 500);
+                }).catch(err => {
+                    msg.style.color = "var(--danger)";
+                    msg.innerText = "⚠️ Permission Denied: Check Firebase Rules!";
+                    btn.disabled = false;
+                });
+            }
+        }).catch(e => {
+            msg.style.color = "var(--danger)";
+            msg.innerText = "⚠️ Database Error: " + e.message;
+            btn.disabled = false;
+        });
     }
+
     function loginSuccess(user) { localStorage.setItem("smm_user", user); currentUser = user; showApp(); }
     function logout() { if(confirm("Logout?")) { localStorage.removeItem("smm_user"); window.location.reload(); } }
     function showApp() { document.getElementById('authBox').style.display='none'; document.getElementById('mainBox').style.display='block'; initApp(); }
@@ -296,28 +339,4 @@
 
     function filterServices() {
         let cat = document.getElementById('catSelect').value, h = "";
-        allServices.forEach(s => {
-            if(s.category === cat) {
-                let health = s.health || "Fast";
-                h += `<div class="serv-item" id="serv_${s.key}" onclick="selectServ('${s.key}', ${s.price}, '${health}')">
-                        <div class="serv-info">
-                            <p class="serv-name"><span class="dot ${health}"></span> ${s.name}</p>
-                            <small>Price: ₹${s.price}/1k | Status: ${health}</small>
-                        </div>
-                      </div>`;
-            }
-        });
-        document.getElementById('serviceList').innerHTML = h || '<p style="text-align:center; padding:10px; color:gray;">Pick a category above.</p>';
-        selectedServiceHealth = "Fast"; selectedServicePrice = 0; calc();
-    }
-
-    // --- ACTIONS ---
-    function placeOrder() {
-        let charge = parseFloat(document.getElementById('charge').value.replace('₹ ', ''));
-        if(selectedServiceHealth === 'Offline') return alert("This service is currently offline.");
-        if(!charge || charge <= 0) return alert("Select service & quantity!");
-        if(balance < charge) return alert("Low Balance!");
-        
-        let selName = document.querySelector('.serv-item.selected .serv-name').innerText.replace(/(🟢|🟡|🔴| )/g, ''); 
-        db.ref('users/'+currentUser).update({balance: balance - charge});
-        db.ref('orders').push({user:currentUser, service:selName, link:document.getElementById
+        allServices.forEach(s =
