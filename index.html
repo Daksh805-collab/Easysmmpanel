@@ -60,12 +60,11 @@
     </div>
     <input type="text" id="auth-user" placeholder="Username">
     <input type="password" id="auth-pass" placeholder="Password">
-    <button class="btn" onclick="handleAuth()">Sign In / Register</button>
-    <p id="auth-msg" style="color: #ef4444; font-size: 12px; text-align: center; margin-top: 10px;"></p>
+    <button class="btn" id="authBtn" onclick="handleAuth()">Sign In / Register</button>
+    <p id="auth-msg" style="color: #ef4444; font-size: 12px; text-align: center; margin-top: 15px; font-weight: bold;"></p>
 </div>
 
 <div id="mainBox" class="app-container">
-    
     <div class="header">
         <h2 style="margin:0; color:var(--primary); font-weight: 800;"><i class="fa-solid fa-bolt"></i> EasySmm</h2>
         <div class="header-actions">
@@ -82,29 +81,24 @@
     <div id="sec-order" class="section active">
         <label>Category</label>
         <select id="catSelect" onchange="filterServices()"></select>
-
         <label>Select Service</label>
         <div class="service-list" id="serviceList"></div>
-
         <label>Target Link</label>
         <input type="text" id="link" placeholder="Paste link here...">
-
         <label>Quantity (Min 100)</label>
         <input type="number" id="qty" placeholder="1000" oninput="calc()">
-
         <label>Charge</label>
         <input type="text" id="charge" readonly placeholder="₹ 0.00" style="font-weight:900; color:var(--primary); background:var(--bg);">
-
         <button class="btn" onclick="placeOrder()">Place Order</button>
     </div>
 
     <div id="sec-history" class="section">
-        <h3><i class="fa-solid fa-history"></i> Order History</h3>
+        <h3>Order Logs</h3>
         <div id="historyList"></div>
     </div>
 
     <div id="sec-funds" class="section">
-        <h3><i class="fa-solid fa-wallet"></i> Add Funds</h3>
+        <h3>Add Funds</h3>
         <center><img id="qrImg" style="max-width:180px; display:none; border-radius:10px; margin-bottom:15px; border:2px solid #ddd;"></center>
         <input type="number" id="utrAmt" placeholder="Amount">
         <input type="text" id="utrNum" placeholder="UTR Number">
@@ -119,7 +113,6 @@
 </div>
 
 <script>
-    // --- FIREBASE CONFIG ---
     const firebaseConfig = { apiKey: "AIzaSyDme0mP07Q8G__B7W1su-4rnIrwwHsSddw", authDomain: "easysmmpanel-5ad4a.firebaseapp.com", databaseURL: "https://easysmmpanel-5ad4a-default-rtdb.firebaseio.com/", projectId: "easysmmpanel-5ad4a" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
 
@@ -127,31 +120,54 @@
     let balance = 0, allServices = [], selectedServicePrice = 0;
 
     window.onload = () => {
-        if (currentUser) {
-            showApp();
-        } else {
-            showAuth();
-        }
+        if (currentUser) { showApp(); } 
+        else { showAuth(); }
     };
 
-    // --- AUTHENTICATION ---
+    // --- NEW FIXED AUTH ---
     function handleAuth() {
         let u = document.getElementById('auth-user').value.trim().toLowerCase();
         let p = document.getElementById('auth-pass').value;
         let msg = document.getElementById('auth-msg');
+        let btn = document.getElementById('authBtn');
         
-        if(!u || !p) return msg.innerText = "Please fill all fields";
-        msg.innerText = "Checking database...";
+        if(!u || !p) { msg.innerText = "❌ Enter both Username & Password"; return; }
+        
+        msg.style.color = "var(--primary)";
+        msg.innerText = "⏳ Connecting to database...";
+        btn.disabled = true;
 
-        db.ref('users/'+u).once('value', s => {
+        db.ref('users/' + u).once('value').then((s) => {
             if(s.exists()){
+                // LOGIN
                 if(s.val().password === p){
-                    loginSuccess(u);
-                } else msg.innerText = "Incorrect password!";
+                    msg.innerText = "✅ Login successful!";
+                    setTimeout(() => loginSuccess(u), 500);
+                } else {
+                    msg.style.color = "#ef4444";
+                    msg.innerText = "❌ Incorrect password!";
+                    btn.disabled = false;
+                }
             } else {
-                // If user doesn't exist, create one
-                db.ref('users/'+u).set({password: p, balance: 0}).then(() => loginSuccess(u));
+                // REGISTER
+                msg.innerText = "✨ Creating new account...";
+                db.ref('users/' + u).set({
+                    password: p,
+                    balance: 0,
+                    regDate: Date.now()
+                }).then(() => {
+                    msg.innerText = "✅ Account created!";
+                    setTimeout(() => loginSuccess(u), 500);
+                }).catch((err) => {
+                    msg.style.color = "#ef4444";
+                    msg.innerText = "⚠️ ERROR: " + err.message;
+                    btn.disabled = false;
+                });
             }
+        }).catch((err) => {
+            msg.style.color = "#ef4444";
+            msg.innerText = "⚠️ CONNECTION ERROR: Check Rules";
+            btn.disabled = false;
         });
     }
 
@@ -162,7 +178,7 @@
     }
 
     function logout() {
-        if(confirm("Are you sure you want to logout?")) {
+        if(confirm("Logout from EasySmm?")) {
             localStorage.removeItem("smm_user");
             window.location.reload();
         }
@@ -179,7 +195,7 @@
         document.getElementById('mainBox').style.display = 'none';
     }
 
-    // --- CALCULATION ENGINE ---
+    // --- MATH & SERVICE ENGINE ---
     function calc() {
         let q = Number(document.getElementById('qty').value);
         let display = document.getElementById('charge');
@@ -192,16 +208,14 @@
 
     function selectServ(key, price) {
         document.querySelectorAll('.serv-item').forEach(i => i.classList.remove('selected'));
-        document.getElementById('serv_' + key).classList.add('selected');
+        let target = document.getElementById('serv_' + key);
+        if(target) target.classList.add('selected');
         selectedServicePrice = parseFloat(price);
         calc();
     }
 
-    // --- DATA LOAD ---
     function initApp() {
         document.getElementById('uNameDisplay').innerText = currentUser;
-        
-        // Sync Balance
         db.ref('users/' + currentUser).on('value', s => {
             if(s.exists()) {
                 balance = s.val().balance || 0;
@@ -209,7 +223,6 @@
             }
         });
 
-        // Sync Services
         db.ref('services').on('value', snap => {
             allServices = []; let cats = new Set();
             snap.forEach(c => { let s = c.val(); s.key = c.key; allServices.push(s); cats.add(s.category); });
@@ -217,7 +230,6 @@
             document.getElementById('catSelect').innerHTML = h;
         });
 
-        // Sync Orders
         db.ref('orders').on('value', snap => {
             let h = ""; snap.forEach(c => {
                 let d = c.val(); if(d.user === currentUser) h = `<div style="border-bottom:1px solid #eee; padding:10px 0;"><b>${d.service}</b><br><small>${d.status} | ₹${d.charge}</small></div>` + h;
@@ -225,35 +237,32 @@
             document.getElementById('historyList').innerHTML = h || "No orders found.";
         });
 
-        // Sync Settings
         db.ref('settings/qr_url').on('value', s => { if(s.val()){ document.getElementById('qrImg').src = s.val(); document.getElementById('qrImg').style.display='block'; }});
     }
 
     function filterServices() {
         let cat = document.getElementById('catSelect').value, h = "";
         allServices.forEach(s => {
-            if(s.category === cat) h += `<div class="serv-item" id="serv_${s.key}" onclick="selectServ('${s.key}', ${s.price})"><div class="serv-info"><p class="serv-name">${s.name}</p><small>Rate: ₹${s.price} /1k</small></div></div>`;
+            if(s.category === cat) h += `<div class="serv-item" id="serv_${s.key}" onclick="selectServ('${s.key}', ${s.price})"><div class="serv-info"><p class="serv-name">${s.name}</p><small>Price: ₹${s.price}/1k</small></div></div>`;
         });
-        document.getElementById('serviceList').innerHTML = h || '<p style="text-align:center; padding:10px; color:gray;">Please pick a category first.</p>';
+        document.getElementById('serviceList').innerHTML = h || '<p style="text-align:center; padding:10px; color:gray;">Pick a category above.</p>';
     }
 
     function placeOrder() {
         let charge = parseFloat(document.getElementById('charge').value.replace('₹ ', ''));
-        if(!charge || charge <= 0) return alert("Please select a service and quantity.");
-        if(balance < charge) return alert("Insufficient balance! Please add funds first.");
+        if(!charge || charge <= 0) return alert("Select service & quantity");
+        if(balance < charge) return alert("Insufficient Balance!");
         
         let selName = document.querySelector('.serv-item.selected .serv-name').innerText;
         db.ref('users/'+currentUser).update({balance: balance - charge});
         db.ref('orders').push({user:currentUser, service:selName, link:document.getElementById('link').value, qty:document.getElementById('qty').value, charge:charge, status:"Pending", timestamp:Date.now()});
-        
-        alert("Order placed successfully!");
+        alert("Order placed!");
         switchTab('sec-history', document.querySelectorAll('.nav-item')[1]);
     }
 
     function submitUTR() {
         let a = document.getElementById('utrAmt').value, n = document.getElementById('utrNum').value;
-        if(a && n) { db.ref('payments').push({user:currentUser, amount:Number(a), utr:n, status:"Pending"}); alert("Details sent to admin!"); }
-        else alert("Fill all fields!");
+        if(a && n) { db.ref('payments').push({user:currentUser, amount:Number(a), utr:n, status:"Pending"}); alert("Request sent!"); }
     }
 
     function switchTab(id, el) {
