@@ -3,54 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EasySmm Ultimate - User</title>
+    <title>EasySmm Ultimate - User Dashboard</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
+        /* --- CORE STYLING & VARIABLES --- */
         :root { --bg: #f8fafc; --primary: #2563eb; --card: #ffffff; --text: #0f172a; --border: #e2e8f0; --danger: #ef4444; --success: #10b981; --warning: #f59e0b;}
         body.dark { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --border: #334155; --primary: #3b82f6;}
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; min-height: 100vh; transition: 0.3s;}
+        
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; min-height: 100vh; transition: background 0.3s, color 0.3s;}
         
         .app-container { width: 100%; max-width: 480px; background: var(--bg); padding-bottom: 80px; position: relative; display: none; }
         
-        /* AUTH SCREEN */
+        /* --- AUTHENTICATION SCREEN --- */
         .auth-screen { width: 100%; max-width: 480px; padding: 30px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; background: var(--card); height: 100vh;}
+        .auth-logo { text-align: center; margin-bottom: 30px; }
+        .auth-logo i { font-size: 60px; color: var(--primary); }
+        .auth-logo h1 { margin-top: 10px; margin-bottom: 5px; color: var(--text); }
         
-        /* HEADER & NOTIFICATIONS */
+        /* --- APP HEADER & PUSH ALERTS --- */
         .header { background: var(--card); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1100; border-bottom: 1px solid var(--border);}
-        .logout-btn { color: var(--danger); font-size: 20px; cursor: pointer; }
+        .header-title { margin: 0; color: var(--primary); font-weight: 800; font-size: 20px;}
+        .header-actions { display: flex; gap: 20px; align-items: center; }
+        .dark-btn { font-size: 20px; cursor: pointer; color: var(--text); }
+        .logout-btn { color: var(--danger); font-size: 20px; cursor: pointer; transition: transform 0.2s; }
+        .logout-btn:active { transform: scale(0.9); }
         .push-alert { position: fixed; top: -100px; left: 0; width: 100%; background: linear-gradient(to right, #f59e0b, #ef4444); color: white; padding: 15px; text-align: center; font-weight: bold; z-index: 9999; transition: 0.5s; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        
-        /* STATS & TABS */
+
+        /* --- STATS CARD (BALANCE) --- */
         .stats-card { background: linear-gradient(135deg, var(--primary), #4f46e5); color: white; padding: 20px; margin: 15px; border-radius: 16px; display: flex; justify-content: space-between; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2); }
-        .section { display: none; padding: 15px; background: var(--card); border-radius: 16px; margin: 15px; border: 1px solid var(--border); animation: fadeIn 0.3s; }
+        .stats-card strong { font-size: 22px; }
+        
+        /* --- SECTIONS (TABS) --- */
+        .section { display: none; padding: 15px; background: var(--card); border-radius: 16px; margin: 15px; border: 1px solid var(--border); animation: fadeIn 0.3s ease-in-out; }
         .section.active { display: block; }
         
-        /* SERVICE LIST & DOTS */
+        /* --- SERVICE LIST UI & HEALTH DOTS --- */
         .service-list { max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 5px; background: var(--bg); margin-bottom: 15px;}
-        .serv-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 8px;}
+        .serv-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 8px; transition: 0.2s;}
+        .serv-item:last-child { border-bottom: none; }
         .serv-item.selected { background: rgba(37, 99, 235, 0.1); border: 2px solid var(--primary); }
         .serv-info { flex: 1; }
+        .serv-name { font-weight: bold; font-size: 13px; margin: 0; color: var(--text);}
+        .serv-price { font-size: 11px; color: gray; margin-top: 3px; display: block;}
         .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px;}
         .dot.Fast { background: var(--success); } .dot.Slow { background: var(--warning); } .dot.Offline { background: var(--danger); }
 
-        /* FORMS */
+        /* --- FORMS & INPUTS --- */
         label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: gray;}
-        select, input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: var(--bg); color: var(--text); font-family: inherit; font-size: 14px;}
-        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; transition: 0.2s;}
-        .btn:active { transform: scale(0.98); }
+        select, input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: var(--bg); color: var(--text); font-family: inherit; font-size: 14px; transition: border 0.3s;}
+        select:focus, input:focus, textarea:focus { outline: none; border-color: var(--primary); }
+        
+        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; transition: opacity 0.2s;}
+        .btn:active { opacity: 0.8; transform: scale(0.98); }
         .btn-small { padding: 5px 10px; font-size: 12px; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; color: white;}
         
-        /* NAV */
+        /* --- BOTTOM NAVIGATION --- */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; background: var(--card); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); z-index: 1000;}
-        .nav-item { text-align: center; color: gray; cursor: pointer; font-size: 10px; flex: 1; font-weight: 600;}
+        .nav-item { text-align: center; color: gray; cursor: pointer; font-size: 10px; flex: 1; font-weight: 600; transition: color 0.2s;}
         .nav-item.active { color: var(--primary); }
         .nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
-        
-        /* FULLSCREEN OVERLAYS (Maintenance/Ban) */
+
+        /* --- FULLSCREEN OVERLAYS (Maintenance/Ban) --- */
         #lockoutScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); z-index: 99999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -67,25 +86,42 @@
 </div>
 
 <div id="authBox" class="auth-screen">
-    <div style="text-align: center; margin-bottom: 20px;"><i class="fa-solid fa-bolt" style="font-size: 60px; color: var(--primary);"></i><h1>EasySmm</h1></div>
-    <input type="text" id="auth-user" placeholder="Username">
-    <input type="password" id="auth-pass" placeholder="Password">
+    <div class="auth-logo">
+        <i class="fa-solid fa-bolt"></i>
+        <h1>EasySmm</h1>
+        <p style="color: gray; font-size: 14px;">Log in or create a new account</p>
+    </div>
+    
+    <label>Username (No spaces/special characters)</label>
+    <input type="text" id="auth-user" placeholder="Enter your username">
+    
+    <label>Password</label>
+    <input type="password" id="auth-pass" placeholder="Enter your password">
+    
     <button class="btn" id="authBtn" onclick="handleAuth()">Sign In / Register</button>
-    <p id="auth-msg" style="color: var(--danger); text-align: center; margin-top: 15px; font-weight: bold; font-size: 13px;"></p>
+    
+    <p id="auth-msg" style="color: var(--danger); font-size: 13px; text-align: center; margin-top: 15px; font-weight: bold; height: 20px;"></p>
 </div>
 
 <div id="mainBox" class="app-container">
+    
     <div class="header">
-        <h2 style="margin:0; color:var(--primary);"><i class="fa-solid fa-bolt"></i> EasySmm</h2>
-        <div style="display: flex; gap: 20px; align-items: center;">
-            <i class="fa-solid fa-circle-half-stroke" style="font-size: 20px; cursor: pointer;" onclick="toggleDark()"></i>
-            <i class="fa-solid fa-power-off logout-btn" onclick="logout()"></i>
+        <h2 class="header-title"><i class="fa-solid fa-bolt"></i> EasySmm</h2>
+        <div class="header-actions">
+            <i class="fa-solid fa-circle-half-stroke dark-btn" onclick="toggleDark()" title="Theme Toggle"></i>
+            <i class="fa-solid fa-power-off logout-btn" onclick="logout()" title="Logout"></i>
         </div>
     </div>
 
     <div class="stats-card">
-        <div><small>Account ID</small><br><strong id="uNameDisplay">...</strong></div>
-        <div style="text-align: right;"><small>Wallet Balance</small><br><strong style="font-size: 20px;">₹<span id="uBal">0.00</span></strong></div>
+        <div>
+            <small style="opacity: 0.8;">Account ID</small><br>
+            <strong id="uNameDisplay">Loading...</strong>
+        </div>
+        <div style="text-align: right;">
+            <small style="opacity: 0.8;">Wallet Balance</small><br>
+            <strong>₹<span id="uBal">0.00</span></strong>
+        </div>
     </div>
 
     <div id="sec-order" class="section active">
@@ -93,60 +129,93 @@
         <select id="catSelect" onchange="filterServices()"></select>
 
         <label>2. Choose Service</label>
-        <div class="service-list" id="serviceList"></div>
+        <div class="service-list" id="serviceList">
+            <p style="text-align:center; padding:20px; color:gray; font-size: 13px;">Please select a category first.</p>
+        </div>
 
         <label>3. Target Link</label>
-        <input type="text" id="link" placeholder="Paste link here...">
+        <input type="text" id="link" placeholder="Paste social media link here...">
 
-        <label>4. Quantity (Min 100)</label>
-        <input type="number" id="qty" placeholder="1000" oninput="calc()">
+        <label>4. Quantity (Minimum 100)</label>
+        <input type="number" id="qty" placeholder="e.g. 1000" oninput="calc()">
 
-        <label>Total Charge</label>
-        <input type="text" id="charge" readonly placeholder="₹ 0.00" style="font-weight:900; color:var(--primary); background:var(--bg);">
+        <label>Total Charge (Calculated Automatically)</label>
+        <input type="text" id="charge" readonly placeholder="₹ 0.00" style="font-weight:900; color:var(--primary); background:var(--bg); border-color:var(--primary);">
 
-        <button class="btn" id="orderBtn" onclick="placeOrder()">Place Order Now</button>
+        <button class="btn" id="orderBtn" onclick="placeOrder()"><i class="fa-solid fa-rocket"></i> Place Order Now</button>
     </div>
 
     <div id="sec-history" class="section">
-        <h3><i class="fa-solid fa-list-check"></i> Order Logs</h3>
-        <div id="historyList">Loading...</div>
+        <h3 style="margin-top: 0; color: var(--text);"><i class="fa-solid fa-clock-rotate-left"></i> Order Logs</h3>
+        <div id="historyList">
+            <p style="text-align:center; color:gray; font-size:13px;">Loading your orders...</p>
+        </div>
     </div>
 
     <div id="sec-funds" class="section">
-        <h3><i class="fa-solid fa-wallet"></i> Deposit Money</h3>
-        <center><img id="qrImg" style="max-width:180px; display:none; border-radius:10px; margin-bottom:15px; border:2px solid var(--border);"></center>
-        <input type="number" id="utrAmt" placeholder="Amount Paid">
-        <input type="text" id="utrNum" placeholder="12-Digit UTR">
+        <h3 style="margin-top: 0; color: var(--text);"><i class="fa-solid fa-wallet"></i> Deposit Money</h3>
+        
+        <div style="text-align: center;">
+            <img id="qrImg" style="max-width:180px; display:none; border-radius:10px; margin-bottom:10px; border:2px solid var(--border);">
+            <p style="font-size: 12px; color: gray; margin-bottom: 20px;">Scan the QR code, complete the payment, and submit your UTR details below.</p>
+        </div>
+
+        <label>Amount Paid (₹)</label>
+        <input type="number" id="utrAmt" placeholder="Enter amount">
+
+        <label>Transaction ID / UTR (12 Digits)</label>
+        <input type="text" id="utrNum" placeholder="e.g. 3124XXXXXXXX">
+
         <button class="btn" onclick="submitUTR()">Verify Payment</button>
     </div>
 
     <div id="sec-help" class="section">
-        <h3><i class="fa-solid fa-headset"></i> Support Tickets</h3>
-        <input type="text" id="t-sub" placeholder="Subject">
-        <textarea id="t-msg" placeholder="Describe issue..." rows="3"></textarea>
-        <button class="btn" onclick="submitTicket()" style="margin-bottom: 20px;">Submit Ticket</button>
+        <h3 style="margin-top: 0; color: var(--text);"><i class="fa-solid fa-headset"></i> Need Help?</h3>
         
-        <h3 style="border-top: 1px solid var(--border); padding-top: 15px;">My Tickets</h3>
-        <div id="ticketList">Loading tickets...</div>
+        <label>Issue Subject</label>
+        <input type="text" id="t-sub" placeholder="e.g. Order not starting">
+        
+        <label>Message Details</label>
+        <textarea id="t-msg" placeholder="Describe your issue in detail..." rows="4"></textarea>
+        
+        <button class="btn" onclick="submitTicket()" style="margin-bottom: 20px;">Submit Support Ticket</button>
+
+        <h3 style="border-top: 1px solid var(--border); padding-top: 15px; margin-top: 10px; color: var(--text);">My Tickets</h3>
+        <div id="ticketList">
+            <p style="text-align:center; color:gray; font-size:13px;">Loading tickets...</p>
+        </div>
     </div>
 
     <div class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('sec-order', this)"><i class="fa-solid fa-cart-shopping"></i>Order</div>
-        <div class="nav-item" onclick="switchTab('sec-history', this)"><i class="fa-solid fa-list"></i>Logs</div>
+        <div class="nav-item" onclick="switchTab('sec-history', this)"><i class="fa-solid fa-list-ul"></i>Logs</div>
         <div class="nav-item" onclick="switchTab('sec-funds', this)"><i class="fa-solid fa-indian-rupee-sign"></i>Funds</div>
-        <div class="nav-item" onclick="switchTab('sec-help', this)"><i class="fa-solid fa-headset"></i>Help</div>
+        <div class="nav-item" onclick="switchTab('sec-help', this)"><i class="fa-solid fa-circle-question"></i>Help</div>
     </div>
 </div>
 
 <script>
-    // --- FIREBASE SETUP ---
-    const firebaseConfig = { apiKey: "AIzaSyDme0mP07Q8G__B7W1su-4rnIrwwHsSddw", authDomain: "easysmmpanel-5ad4a.firebaseapp.com", databaseURL: "https://easysmmpanel-5ad4a-default-rtdb.firebaseio.com/", projectId: "easysmmpanel-5ad4a" };
-    firebase.initializeApp(firebaseConfig); const db = firebase.database();
+    // --- FIREBASE INITIALIZATION ---
+    const firebaseConfig = { 
+        apiKey: "AIzaSyDme0mP07Q8G__B7W1su-4rnIrwwHsSddw", 
+        authDomain: "easysmmpanel-5ad4a.firebaseapp.com", 
+        databaseURL: "https://easysmmpanel-5ad4a-default-rtdb.firebaseio.com/", 
+        projectId: "easysmmpanel-5ad4a" 
+    };
+    firebase.initializeApp(firebaseConfig); 
+    const db = firebase.database();
 
+    // --- GLOBAL VARIABLES ---
     let currentUser = localStorage.getItem("smm_user");
-    let balance = 0, allServices = [], selectedServicePrice = 0, selectedServiceHealth = "Offline";
+    let balance = 0;
+    let allServices = [];
+    let selectedServicePrice = 0;
+    let selectedServiceHealth = "Offline";
 
-    window.onload = () => { if (currentUser) { showApp(); } else { showAuth(); } };
+    // --- ON PAGE LOAD ---
+    window.onload = () => { 
+        if (currentUser) { showApp(); } else { showAuth(); } 
+    };
 
     // --- SYSTEM LOCKOUTS (MAINTENANCE & BANS) ---
     db.ref('settings/maintenance').on('value', s => {
@@ -169,72 +238,82 @@
                 document.getElementById('lockTitle').innerText = "Account Banned";
                 document.getElementById('lockMsg').innerText = "Your account has been suspended by the Admin.";
                 document.getElementById('mainBox').style.display = 'none';
-                localStorage.removeItem("smm_user"); // Force logout
+                localStorage.removeItem("smm_user"); // Force logout locally
             }
         });
     }
 
-    // --- ENHANCED AUTHENTICATION ---
+    // --- AUTHENTICATION ENGINE (BULLETPROOF FIXED) ---
     function handleAuth() {
-        let u = document.getElementById('auth-user').value.trim().toLowerCase();
+        let rawUser = document.getElementById('auth-user').value.trim().toLowerCase();
+        let u = rawUser.replace(/[^a-z0-9]/g, ''); // Fix: Removes spaces and special chars
         let p = document.getElementById('auth-pass').value;
         let msg = document.getElementById('auth-msg');
         let btn = document.getElementById('authBtn');
         
-        if(!u || !p) {
+        if(!u || !p) { 
             msg.style.color = "var(--danger)";
-            msg.innerText = "❌ Please enter Username and Password!";
-            return;
+            msg.innerText = "❌ Please enter Username and Password."; 
+            return; 
+        }
+
+        if(rawUser !== u) {
+            document.getElementById('auth-user').value = u;
+            alert("Note: Spaces and special characters are not allowed. Your username is set to: " + u);
         }
         
         msg.style.color = "var(--primary)";
-        msg.innerText = "⏳ Connecting to database...";
+        msg.innerText = "⏳ Verifying account...";
         btn.disabled = true;
-        
+
         db.ref('users/' + u).once('value').then(s => {
-            if(s.exists()){ 
+            if(s.exists()){
+                // LOGIN
                 if(s.val().password === p){ 
-                    msg.style.color = "var(--success)";
-                    msg.innerText = "✅ Login Success!";
-                    setTimeout(() => loginSuccess(u), 500); 
-                } else {
+                    msg.style.color = "#10b981"; 
+                    msg.innerText = "✅ Login successful!";
+                    setTimeout(() => loginSuccess(u), 500);
+                } else { 
                     msg.style.color = "var(--danger)";
-                    msg.innerText = "❌ Wrong Password!"; 
-                    btn.disabled = false;
+                    msg.innerText = "❌ Incorrect password. Try again."; 
+                    btn.disabled = false; 
                 }
-            } else { 
-                msg.innerText = "✨ Creating your account...";
+            } else {
+                // REGISTER
+                msg.innerText = "✨ Creating new account...";
                 db.ref('users/' + u).set({
                     password: p, 
-                    balance: 0, 
-                    joined: Date.now()
+                    balance: 0,
+                    joined: Date.now(),
+                    banned: false
                 }).then(() => {
-                    msg.style.color = "var(--success)";
-                    msg.innerText = "✅ Account Created!";
+                    msg.style.color = "#10b981";
+                    msg.innerText = "✅ Account created successfully!";
                     setTimeout(() => loginSuccess(u), 500);
-                }).catch(err => {
+                }).catch(e => {
+                    alert("FIREBASE ERROR: Your database rules are blocking registration. Change .read and .write to true in Firebase Console.");
                     msg.style.color = "var(--danger)";
-                    msg.innerText = "⚠️ Permission Denied: Check Firebase Rules!";
+                    msg.innerText = "⚠️ Permission Denied: Rules locked."; 
                     btn.disabled = false;
                 });
             }
-        }).catch(e => {
+        }).catch(e => { 
             msg.style.color = "var(--danger)";
-            msg.innerText = "⚠️ Database Error: " + e.message;
-            btn.disabled = false;
+            msg.innerText = "⚠️ Network Error: " + e.message; 
+            btn.disabled = false; 
         });
     }
 
     function loginSuccess(user) { localStorage.setItem("smm_user", user); currentUser = user; showApp(); }
-    function logout() { if(confirm("Logout?")) { localStorage.removeItem("smm_user"); window.location.reload(); } }
-    function showApp() { document.getElementById('authBox').style.display='none'; document.getElementById('mainBox').style.display='block'; initApp(); }
-    function showAuth() { document.getElementById('authBox').style.display='flex'; document.getElementById('mainBox').style.display='none'; }
+    function logout() { if(confirm("Are you sure you want to log out?")) { localStorage.removeItem("smm_user"); window.location.reload(); } }
+    function showApp() { document.getElementById('authBox').style.display = 'none'; document.getElementById('mainBox').style.display = 'block'; initAppData(); }
+    function showAuth() { document.getElementById('authBox').style.display = 'flex'; document.getElementById('mainBox').style.display = 'none'; }
 
-    // --- PUSH NOTIFICATIONS ---
+    // --- PUSH NOTIFICATIONS (GLOBAL ALERTS) ---
     db.ref('settings/notification').on('value', snap => {
         if(snap.exists() && snap.val().msg) {
             let data = snap.val();
-            if(Date.now() - data.time < 300000) {
+            if(Date.now() - data.time < 300000) { // Only show if sent in last 5 mins
                 document.getElementById('pushMsg').innerText = data.msg;
                 document.getElementById('pushBanner').style.top = "0px";
                 setTimeout(() => { document.getElementById('pushBanner').style.top = "-100px"; }, 6000);
@@ -242,101 +321,67 @@
         }
     });
 
-    // --- SERVICE MATH & HEALTH ---
+    // --- DYNAMIC CHARGE CALCULATOR ---
     function calc() {
         let q = Number(document.getElementById('qty').value);
+        let display = document.getElementById('charge');
         let btn = document.getElementById('orderBtn');
+        
         if(selectedServiceHealth === 'Offline') {
-            document.getElementById('charge').value = "SERVICE OFFLINE";
-            btn.style.background = "gray"; btn.innerText = "Currently Offline"; btn.disabled = true;
+            display.value = "SERVICE OFFLINE";
+            btn.style.background = "gray"; 
+            btn.innerHTML = '<i class="fa-solid fa-ban"></i> Currently Offline'; 
+            btn.disabled = true;
         } else {
-            btn.style.background = "var(--primary)"; btn.innerText = "Place Order Now"; btn.disabled = false;
-            if (q >= 100 && selectedServicePrice > 0) document.getElementById('charge').value = "₹ " + ((q / 1000) * selectedServicePrice).toFixed(2);
-            else document.getElementById('charge').value = "₹ 0.00";
+            btn.style.background = "var(--primary)"; 
+            btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Place Order Now'; 
+            btn.disabled = false;
+            
+            if (q >= 100 && selectedServicePrice > 0) {
+                let total = (q / 1000) * selectedServicePrice;
+                display.value = "₹ " + total.toFixed(2);
+            } else { 
+                display.value = "₹ 0.00"; 
+            }
         }
     }
 
+    // --- SERVICE SELECTION ---
     function selectServ(key, price, health) {
         document.querySelectorAll('.serv-item').forEach(i => i.classList.remove('selected'));
-        let el = document.getElementById('serv_' + key); if(el) el.classList.add('selected');
-        selectedServicePrice = parseFloat(price); selectedServiceHealth = health || "Fast";
+        let el = document.getElementById('serv_' + key);
+        if(el) el.classList.add('selected');
+        
+        selectedServicePrice = parseFloat(price);
+        selectedServiceHealth = health || "Fast";
         calc();
     }
 
-    // --- SYNC DATA ---
-    function initApp() {
+    // --- DATA SYNCHRONIZATION ---
+    function initAppData() {
         document.getElementById('uNameDisplay').innerText = currentUser;
-        db.ref('users/' + currentUser + '/balance').on('value', s => { balance = s.val() || 0; document.getElementById('uBal').innerText = balance.toFixed(2); });
+        
+        // Sync Balance
+        db.ref('users/' + currentUser + '/balance').on('value', s => {
+            balance = s.val() || 0; 
+            document.getElementById('uBal').innerText = balance.toFixed(2);
+        });
 
+        // Sync Services
         db.ref('services').on('value', snap => {
             allServices = []; let cats = new Set();
             snap.forEach(c => { let s = c.val(); s.key = c.key; allServices.push(s); cats.add(s.category); });
-            let h = '<option value="">Select Category</option>'; cats.forEach(c => h += `<option value="${c}">${c}</option>`);
-            document.getElementById('catSelect').innerHTML = h; filterServices();
+            
+            let h = '<option value="">-- Choose a Category --</option>'; 
+            cats.forEach(c => h += `<option value="${c}">${c}</option>`);
+            document.getElementById('catSelect').innerHTML = h;
+            filterServices();
         });
 
-        // ORDER HISTORY + REFILL/CANCEL
+        // Sync Orders & Refill/Cancel Buttons
         db.ref('orders').on('value', snap => {
-            let h = ""; snap.forEach(c => {
+            let h = ""; 
+            snap.forEach(c => {
                 let d = c.val(); 
                 if(d.user === currentUser) {
-                    let actionBtn = "";
-                    if(d.status === "Pending" && !d.cancel_request) actionBtn = `<button class="btn-small" style="background:var(--danger);" onclick="reqCancel('${c.key}')">Request Cancel</button>`;
-                    else if(d.cancel_request) actionBtn = `<span style="font-size:11px; color:var(--danger); font-weight:bold;">Cancel Requested</span>`;
-                    else if(d.status === "Completed") {
-                        if(!d.refill_status || d.refill_status === 'Available') actionBtn = `<button class="btn-small" style="background:var(--success);" onclick="reqRefill('${c.key}')">Request Refill</button>`;
-                        else actionBtn = `<span style="font-size:11px; color:var(--success); font-weight:bold;">Refill: ${d.refill_status}</span>`;
-                    }
-                    
-                    h = `<div style="border-bottom:1px solid var(--border); padding:10px 0;">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                                <b>${d.service}</b>
-                                <strong style="color:var(--primary); font-size:12px;">${d.status}</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <small>Qty: ${d.qty} | ₹${d.charge}</small>
-                                ${actionBtn}
-                            </div>
-                        </div>` + h;
-                }
-            });
-            document.getElementById('historyList').innerHTML = h || "<p style='text-align:center; color:gray;'>No orders yet.</p>";
-        });
-
-        // TICKET HISTORY
-        db.ref('tickets').on('value', snap => {
-            let h = ""; snap.forEach(c => {
-                let d = c.val();
-                if(d.user === currentUser) {
-                    let statusColor = d.status === 'Open' ? 'var(--warning)' : 'var(--success)';
-                    h = `<div style="border-bottom:1px solid var(--border); padding:10px 0;">
-                            <div style="display:flex; justify-content:space-between;"><b>${d.subject}</b><small style="color:${statusColor}; font-weight:bold;">${d.status}</small></div>
-                            <small style="color:gray;">${d.message}</small>
-                        </div>` + h;
-                }
-            });
-            document.getElementById('ticketList').innerHTML = h || "<p style='text-align:center; color:gray;'>No support tickets.</p>";
-        });
-
-        // WHATSAPP BUTTON
-        db.ref('settings/whatsapp').on('value', s => {
-            let existingBtn = document.getElementById('waSupportBtn');
-            if(s.val()) {
-                if(!existingBtn) {
-                    let waBtn = document.createElement('a');
-                    waBtn.id = "waSupportBtn";
-                    waBtn.innerHTML = '<i class="fa-brands fa-whatsapp"></i>';
-                    waBtn.style.cssText = "position:fixed; bottom:70px; right:20px; background:#25d366; color:white; padding:15px 17px; border-radius:50%; font-size:24px; box-shadow:0 4px 10px rgba(0,0,0,0.2); z-index:1000; text-decoration:none;";
-                    document.body.appendChild(waBtn);
-                    existingBtn = waBtn;
-                }
-                existingBtn.href = "https://wa.me/" + s.val();
-            } else if(existingBtn) existingBtn.remove();
-        });
-
-        db.ref('settings/qr_url').on('value', s => { if(s.val()){ document.getElementById('qrImg').src = s.val(); document.getElementById('qrImg').style.display='block'; }});
-    }
-
-    function filterServices() {
-        let cat = document.getElementById('catSelect').value, h = "";
-        allServices.forEach(s =
+                    let 
